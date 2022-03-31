@@ -40,6 +40,7 @@ struct treeNode{
 };
 typedef struct treeNode* P_Node;
 
+//语法生成式为空的节点
 static P_Node EmptyNode(){
     P_Node null = (P_Node)malloc(sizeof(struct treeNode));
     null->Token = NULL;
