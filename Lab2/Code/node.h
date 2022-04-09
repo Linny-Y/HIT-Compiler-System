@@ -63,6 +63,8 @@ static P_Node NewTreeNode(int line, char* TOKEN, int amount, ...){
     if (amount == 0){
         //表示当前节点是终结符（叶节点）
         root->isleaf = TRUE;
+        root->firstchild = NULL;
+        root->nextbro = NULL;
         if ((!strcmp(TOKEN, "ID"))||(!strcmp(TOKEN, "TYPE"))){ // strcmp()==0 表示相同
             char *str;
             str = (char *)malloc(sizeof(char) * 40);
@@ -90,6 +92,7 @@ static P_Node NewTreeNode(int line, char* TOKEN, int amount, ...){
                 child->nextbro = va_arg(list,P_Node);
                 child = child->nextbro;
             }
+            child->nextbro = NULL;
         }
         va_end(list);
     }

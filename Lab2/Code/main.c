@@ -1,10 +1,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "node.h"
+#include "semantics.h"
+
 extern FILE* yyin;
 extern P_Node root;
+
 void yyrestart (FILE *input_file);
 int yyparse(void);
+
 int hasFault = FALSE;
 
 int main(int argc, char** argv)
@@ -18,7 +22,8 @@ int main(int argc, char** argv)
     yyrestart(f); //初始化输入文件指针yyin
     yyparse(); //语法分析
     if (!hasFault){
-        Traverse_Print(root, 0);
+        // Traverse_Print(root, 0);
+        semantic_analysis(root);  // 语义分析
     }
     return 0;
 }
