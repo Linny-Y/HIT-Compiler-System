@@ -17,32 +17,42 @@
 #define DEF_NOT_IN_STRUCT 0
 #define DEF_IN_STRUCT 1
 
-typedef struct Type_* Type;
-typedef struct FieldList_* FieldList;
-typedef struct Vari_* Vari; 
-typedef struct Function_* Function;
+typedef struct Type_ *Type;
+typedef struct FieldList_ *FieldList;
+typedef struct Vari_ *Vari;
+typedef struct Function_ *Function;
 struct Type_
 {
-    enum {BASIC,ARRAY,STRUCT} type;
-    int basic;//0表示int 1表示float
-    struct {Type elem;int size;} array;//元素类型+数组大小
-    FieldList structure;//结构体类型
-    
+    enum
+    {
+        BASIC,
+        ARRAY,
+        STRUCT
+    } type;
+    int basic; // 0表示int 1表示float
+    struct
+    {
+        Type elem;
+        int size;
+    } array;             //元素类型+数组大小
+    FieldList structure; //结构体类型
 };
 struct FieldList_
 {
-    char* name;
+    char *name;
     Type type;
     FieldList next;
 };
-struct Vari_{
+struct Vari_
+{
     int is_def_struct;
     FieldList field;
     Vari next;
     int line;
 };
-struct Function_ {
-    char* name;
+struct Function_
+{
+    char *name;
     FieldList field;
     Type return_type;
     int defined;
@@ -50,21 +60,20 @@ struct Function_ {
     Function next;
 };
 
-
 // hash function
-unsigned int hash_pjw(char* name);
+unsigned int hash_pjw(char *name);
 
 // check if a name is in the table
-Vari find_vari_table(char* name);
+Vari find_vari_table(char *name);
 
 // add a field to the table
 void insert_vari_table(FieldList field_list, int line, int in_struct);
 
 // compare two types
 int typecmp(Type a, Type b);
-int fieldcmp(FieldList a,FieldList b, int compare_name);
+int fieldcmp(FieldList a, FieldList b, int compare_name);
 
-Function find_function_table(char* name);
+Function find_function_table(char *name);
 // add a function to the function table
 void insert_function_table(Function func);
 
@@ -83,7 +92,7 @@ Type Specifier(P_Node now);
 // description of struct
 Type StructSpecifier(P_Node now);
 // name of struct
-char* OptTag(P_Node now);
+char *OptTag(P_Node now);
 
 // def list of variables, functions, structs (local)
 FieldList DefList(P_Node now, int judge);
@@ -114,6 +123,5 @@ void StmtList(P_Node now, Type type);
 void Stmt(P_Node now, Type type);
 Type Exp(P_Node now);
 // FieldList Args(P_Node now);
-
 
 #endif
