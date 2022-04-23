@@ -2,6 +2,8 @@
 #define INTERIM_H
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
+
 #include "semantics.h"
 //优化
 // 1.t1=*a, t1=1 ==> *a=1
@@ -14,13 +16,17 @@
 #define LESS_EQUAL 4
 #define GREATER_EQUAL 5
 
+#define INTERCODE_1 1
+#define INTERCODE_2 2
+#define INTERCODE_3 3
+#define INTERCODE_IF 4
+#define INTERCODE_DEC 12
+#define OPERAND_NULL -1
+
 typedef struct Operand_ *Operand;
 typedef struct InterCode_ *InterCode;
 
-struct Operand_
-{
-    enum
-    {
+enum OperandKind{
         FROM_ARG, // FROM_ARG用于传递给exp的arg，因为做为函数参数时的temp, temp[2]都会返回address//但实际上，temp[2]应返回basic
         VARIABLE, // VARIABLE普通函数参数, char+int//先查询符号表中是否以及给该变量var值
         TEMP,     // TEMP临时变量, int
@@ -30,10 +36,13 @@ struct Operand_
         FUNCTION, // FUNCTION函数, char
         LABEL,    // LABEL标号
         RELOP     // RELOP比较，见下, int//相等0，不等1，小于2，大于3，小于等于4，大于等于5
-    } kind;
+    };
+struct Operand_
+{
+    enum OperandKind kind;
     int u_int; // t1t2
     char *u_char;
-    Type type; //用于结构体和数组变量的Offset查询
+    Type type; 
 };
 
 // PARAM打印param v+u_int
@@ -41,10 +50,7 @@ struct Operand_
 // ADDRASS2打印：t2=*t1
 // ADDRADD3其实是在赋值语句中，如果左为address, 右为其他的话
 // ARG打印：如果address就&，不是则正常
-struct InterCode_
-{
-    enum
-    {
+enum InterCodeKind{
         ILABEL,
         IFUNCTION,
         ASSIGN,
@@ -64,7 +70,10 @@ struct InterCode_
         PARAM,
         READ,
         WRITE
-    } kind;
+    } ;
+struct InterCode_
+{
+    enum InterCodeKind kind;
     union
     {
         // LABEL, FUNCTION, GOTO, RETURN, ARG
@@ -100,10 +109,12 @@ struct InterCode_
     InterCode next;
 };
 
-void translate_print_test(InterCode temp);
+Operand new_temp();
+Operand new_label();
 void translate_print(FILE *f);
 
 void translate_Program(P_Node now, FILE *F);
+void translate_ExtDefList(P_Node now);
 void translate_ExtDef(P_Node now);
 void translate_FunDec(P_Node now);
 void translate_CompSt(P_Node now);
@@ -122,10 +133,7 @@ void translate_Specifier(P_Node now);
 void translate_StructSpecifier(P_Node now);
 
 void add_to_intercode(InterCode this);
-Operand new_temp();
-Operand new_label();
-// t0=0表示从结构体中来，t0=1表示从数组中来
-int get_offset(Type return_type, P_Node after);
+int get_offset(Type return_type);
 int get_size(Type type);
 
 #endif
