@@ -17,6 +17,9 @@
 #define DEF_NOT_IN_STRUCT 0
 #define DEF_IN_STRUCT 1
 
+#define FROM_FUNC 0
+#define NOT_FROM_FUNC 1
+
 typedef struct Type_ *Type;
 typedef struct FieldList_ *FieldList;
 typedef struct Vari_ *Vari;
@@ -49,6 +52,8 @@ struct Vari_
     FieldList field;
     Vari next;
     int line;
+    int variable;//用于lab3的变量,记录其t后的数据
+    int is_from_func;//用于lab3的variable以及address类型的区分
 };
 struct Function_
 {
@@ -67,7 +72,7 @@ unsigned int hash_pjw(char *name);
 Vari find_vari_table(char *name);
 
 // add a field to the table
-void insert_vari_table(FieldList field_list, int line, int in_struct);
+void insert_vari_table(FieldList field_list, int line, int in_struct,int is_from_fun);
 
 // compare two types
 int typecmp(Type a, Type b);
@@ -123,6 +128,6 @@ void StmtList(P_Node now, Type type);
 // stament
 void Stmt(P_Node now, Type type);
 Type Exp(P_Node now);
-// FieldList Args(P_Node now);
+FieldList Args(P_Node now);
 
 #endif

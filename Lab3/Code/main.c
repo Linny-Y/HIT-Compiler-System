@@ -20,6 +20,12 @@ int main(int argc, char** argv)
         perror(argv[1]);  //把一个描述性错误消息输出到标准错误 stderr
         return 1;
     }
+    FILE* f2=fopen(argv[2],"w+");
+    if(!f2)
+    {
+        perror(argv[2]);
+        return 1;
+    }
     yyrestart(f); //初始化输入文件指针yyin
     yyparse(); //语法分析
     if (!hasFault){
@@ -30,18 +36,5 @@ int main(int argc, char** argv)
     return 0;
 }
 
-/*
-int main(int argc, char** argv){
-    if (argc > 1)
-    {
-        if (!(yyin=fopen(argv[1], "r"))){
-            perror(argv[1]); //把一个描述性错误消息输出到标准错误 stderr
-            return 1;
-        }
-    }
-    while (yylex() != 0);
-    return 0;
-}
-*/
 
 

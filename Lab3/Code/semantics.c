@@ -4,7 +4,7 @@
 Vari varitable[SIZE+1];//储存结构体或变量
 Function functiontable[SIZE + 1];
 int struct_without_name=0;
-
+int temp_num=1;
 
 unsigned int hash_pjw(char* name){
     unsigned int val=0,i;
@@ -27,26 +27,41 @@ Vari find_vari_table(char* name){
     }
     return x;
 }
-Vari create_vari(int in_struct, FieldList field, Vari next, int line) {
+Vari create_vari(int in_struct, int is_from_func, FieldList field, Vari next, int line) {
     Vari vari_table = (Vari)malloc(sizeof(struct Vari_));
     vari_table->is_def_struct = in_struct;
     vari_table->field = field;
     vari_table->next = next;
     vari_table->line = line;
+    vari_table->variable = temp_num;
+    vari_table->is_from_func = is_from_func;
+    temp_num++;
     return vari_table;
 }
+
+Function create_function(char* name, FieldList field, Type return_type, int defined, int line, Function next) {
+    Function function = (Function)malloc(sizeof(struct Function_));
+    function->name = name;
+    function->field = field;
+    function->return_type = return_type;
+    function->defined = defined;
+    function->line = line;
+    function->next = next;
+    return function;
+}
+
 // add a field to the table
-void insert_vari_table(FieldList field_list, int line, int in_struct){
+void insert_vari_table(FieldList field_list, int line, int in_struct, int is_from_func){
     int val = hash_pjw(field_list->name);
     if (varitable[val] == NULL) {
-        varitable[val] = create_vari(in_struct, field_list, NULL, line);
+        varitable[val] = create_vari(in_struct, is_from_func, field_list, NULL, line);
         return;
     }
     Vari now = varitable[val];
     while (now->next != NULL) {
         now = now->next;
     }
-    now->next = create_vari(in_struct, field_list, NULL, line);
+    now->next = create_vari(in_struct, is_from_func, field_list, NULL, line);
 }
 
 // compare two types
@@ -114,9 +129,28 @@ int funccmp(Function a, Function b) {
         return 1;
     return 0;
 }
+
+Type create_type_basic(int basic) {
+    Type type = (Type)malloc(sizeof(struct Type_));
+    type->type = BASIC;
+    type->basic = basic;
+    return type;
+}
+
+FieldList create_fieldlist(char* name, Type type, FieldList next) {
+    FieldList field = (FieldList)malloc(sizeof(struct FieldList_));
+    field->name = name;
+    field->type = type;
+    field->next = next;
+    return field;
+}
+
 // 建立变量表 查找错误
 void semantic_analysis(P_Node now){
     // Program -> ExtDefList
+    insert_function_table(create_function("read", NULL, create_type_basic(T_INT), 1, 0, NULL));
+    insert_function_table(create_function("write", create_fieldlist("param", create_type_basic(T_INT), NULL), create_type_basic(T_INT), 1, 0, NULL));
+    
     P_Node extdeflist=now->firstchild;
     while(extdeflist->firstchild!=NULL && extdeflist->firstchild->Token!=NULL){
         // ExtDefList -> ExtDef ExtDefList| empty
@@ -191,7 +225,7 @@ Type StructSpecifier(P_Node now){
         struct_field->next = NULL;
         if (struct_field->name == NULL)
             return NULL;
-        insert_vari_table(struct_field, now->firstchild->line, DEF_IN_STRUCT);
+        insert_vari_table(struct_field, now->firstchild->line, DEF_IN_STRUCT, NOT_FROM_FUNC);
         type->structure = struct_field;
         return type;
     }else {
@@ -304,7 +338,10 @@ FieldList VarDec(P_Node now,Type type,int judge){
                 return NULL;
             }
         }
-        insert_vari_table(fieldlist,child->line,DEF_NOT_IN_STRUCT);
+        if (judge == DEF_FUNC)
+            insert_vari_table(fieldlist,child->line,DEF_NOT_IN_STRUCT, FROM_FUNC);
+        else
+            insert_vari_table(fieldlist,child->line,DEF_NOT_IN_STRUCT, NOT_FROM_FUNC);
         return fieldlist;
     }
     else{
@@ -333,17 +370,10 @@ void FunDec(P_Node now, Type type, int judge) {
     // FunDec -> ID LP VarList RP | ID LP RP
     P_Node id = now->firstchild;
     P_Node varlist = id->nextbro->nextbro;
-    Function func = (Function)malloc(sizeof(struct Function_));
-    func->name = id->Id_Type;
-    func->field = NULL;
-    func->return_type = type;
-    func->defined = 0;
-    func->line = now->line;
-    func->next = NULL;
+    Function func = create_function(id->Id_Type, NULL, type, 0, now->line, NULL);
     if (varlist->nextbro) {
         func->field = VarList(varlist, judge);
     }
-    // printf("@@@@@@@@\n");
     Function find_func = find_function_table(func->name);
     if (find_func == NULL) {
         func->defined = 1;
@@ -577,4 +607,42 @@ Type Exp(P_Node now){
         //Exp → LP Exp RP
         return Exp(fir_bro);
     }
+    if (strcmp(child->Token, "ID") == 0 && strcmp(fir_bro->Token, "LP") == 0) {
+        // Exp -> ID LP Args RP
+        // Exp -> ID LP RP
+        if (find_vari_table(child->Id_Type) != NULL) {
+            // printf("%d ", __LINE__);
+            printf("Error type 11 at Line %d: Not a function.\n", child->line);
+            return NULL;
+        }
+        Function id_function = find_function_table(child->Id_Type);
+        if (id_function == NULL || id_function->defined == 0) {
+            // printf("%d ", __LINE__);
+            printf("Error type 2 at Line %d: Undefined function \"%s\".\n", child->line, child->Id_Type);
+            return NULL;
+        }
+        if (fir_bro->nextbro->nextbro != NULL) {
+            if (fieldcmp(id_function->field, Args(fir_bro->nextbro), 0) == 0)
+                return id_function->return_type;
+        } else {
+            if (fieldcmp(id_function->field, NULL, 0) == 0)
+                return id_function->return_type;
+        }
+
+        // printf("%d ", __LINE__);
+        printf("Error type 9 at Line %d: Inappliable arguments for function \"%s\".\n", child->line, id_function->name);
+        return NULL;
+    }
+}
+FieldList Args(P_Node now) {
+    // Args -> Exp COMMA Args| Exp
+    P_Node exp = now->firstchild;
+    if (exp->nextbro == NULL) {
+        // Args -> Exp
+        FieldList new_field = create_fieldlist(NULL, Exp(exp), NULL);
+        return new_field;
+    }
+    // Args -> Exp COMMA Args
+    FieldList new_field = create_fieldlist(NULL, Exp(exp), Args(exp->nextbro->nextbro));
+    return new_field;
 }
