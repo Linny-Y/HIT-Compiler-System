@@ -9,59 +9,40 @@ extern int temp_num;
 
 void translate_print(FILE *f)
 {
-    // printf("a translate_print\n");
     InterCode temp = in_head;
-    // InterCode temp=in_now;
-    // in_head->before=NULL;
     int judge_is_null = 0;
-    int a = 0;
-    // add,sub,mul,div没考虑null
 
     while (temp != NULL)
     {
         if (temp->kind == ILABEL)
         {
-            // printf("a translate_print ILABEL %d\n",temp->u.ulabel.op->u_int);
-            fprintf(f, "LABEL label");
-            fprintf(f, "%d ", temp->u.ulabel.op->u_int);
-            fprintf(f, ":");
+            fprintf(f, "LABEL label%d :"), temp->ulabel.op->u_int;
         }
         else if (temp->kind == IFUNCTION)
         {
             // printf("a translate_print IFUNCTION\n");
-            fprintf(f, "FUNCTION ");
-            fprintf(f, "%s ", temp->u.ulabel.op->u_char);
-            fprintf(f, ":");
+            fprintf(f, "FUNCTION %s :", temp->ulabel.op->u_char);
         }
         else if (temp->kind == ASSIGN)
         {
             // printf("a translate_print ASSIGN\n");
-            Operand t1 = temp->u.uassign.op1;
-            Operand t2 = temp->u.uassign.op2;
+            Operand t1 = temp->uassign.op1;
+            Operand t2 = temp->uassign.op2;
             if (t1 == NULL || t2 == NULL)
             {
                 judge_is_null = 1;
-                // printf("a 1\n");
             }
             else if (t1->kind == ADDRESS && t2->kind == ADDRESS)
             {
-                // printf("a 1.1\n");
-                fprintf(f, "*t%d", t1->u_int);
-                fprintf(f, " := ");
-                fprintf(f, "*t%d", t2->u_int);
+                fprintf(f, "*t%d := *t%d", t1->u_int, t2->u_int);
             }
             else if (t2->kind == ADDRESS)
             {
-                // printf("a 1.3\n");
-                fprintf(f, "t%d", t1->u_int);
-                fprintf(f, " := ");
-                fprintf(f, "*t%d", t2->u_int);
+                fprintf(f, "t%d := *t%d", t1->u_int, t2->u_int);
             }
             else if (t1->kind == ADDRESS)
             {
-                // printf("a 1.2\n");
-                fprintf(f, "&t%d", t1->u_int);
-                fprintf(f, " := ");
+                fprintf(f, "&t%d := ", t1->u_int);
                 if (t2->kind == CONSTANT)
                     fprintf(f, "#%d", t2->u_int);
                 else
@@ -69,101 +50,34 @@ void translate_print(FILE *f)
             }
             else
             {
-                // printf("a 1.4\n");
-                fprintf(f, "t%d", t1->u_int);
-                fprintf(f, " := ");
+                fprintf(f, "t%d := ", t1->u_int);
                 if (t2->kind == CONSTANT)
                     fprintf(f, "#%d", t2->u_int);
                 else
                     fprintf(f, "t%d", t2->u_int);
             }
         }
-        else if (temp->kind == ADD)
+        else if (temp->kind == ADD || temp->kind == SUB || temp->kind == MUL || temp->kind == DIV)
         {
-            // printf("a translate_print  ADD\n");
-            Operand t1 = temp->u.ubinop.result;
-            Operand t2 = temp->u.ubinop.op1;
-            Operand t3 = temp->u.ubinop.op2;
-            if (t1 == NULL)
-                ;
-            else
-            {
-                fprintf(f, "t%d", t1->u_int);
-                fprintf(f, " := ");
+            Operand t1 = temp->ubinop.result;
+            Operand t2 = temp->ubinop.op1;
+            Operand t3 = temp->ubinop.op2;
+            if (t1){
+                fprintf(f, "t%d := ", t1->u_int);
                 if (t2->kind == CONSTANT)
                     fprintf(f, "#%d", t2->u_int);
                 else
                     fprintf(f, "t%d", t2->u_int);
-                fprintf(f, " + ");
-                if (t3->kind == CONSTANT)
-                    fprintf(f, "#%d", t3->u_int);
-                else
-                    fprintf(f, "t%d", t3->u_int);
-            }
-        }
-        else if (temp->kind == SUB)
-        {
-            // printf("a translate_print SUB\n");
-            Operand t1 = temp->u.ubinop.result;
-            Operand t2 = temp->u.ubinop.op1;
-            Operand t3 = temp->u.ubinop.op2;
-            if (t1 == NULL)
-                ;
-            else
-            {
-                fprintf(f, "t%d", t1->u_int);
-                fprintf(f, " := ");
-                if (t2->kind == CONSTANT)
-                    fprintf(f, "#%d", t2->u_int);
-                else
-                    fprintf(f, "t%d", t2->u_int);
-                fprintf(f, " - ");
-                if (t3->kind == CONSTANT)
-                    fprintf(f, "#%d", t3->u_int);
-                else
-                    fprintf(f, "t%d", t3->u_int);
-            }
-        }
-        else if (temp->kind == MUL)
-        {
-            // printf("a translate_print MUL\n");
-            Operand t1 = temp->u.ubinop.result;
-            Operand t2 = temp->u.ubinop.op1;
-            Operand t3 = temp->u.ubinop.op2;
-            if (t1 == NULL)
-                ;
-            else
-            {
-                fprintf(f, "t%d", t1->u_int);
-                fprintf(f, " := ");
-                if (t2->kind == CONSTANT)
-                    fprintf(f, "#%d", t2->u_int);
-                else
-                    fprintf(f, "t%d", t2->u_int);
-                fprintf(f, " * ");
-                if (t3->kind == CONSTANT)
-                    fprintf(f, "#%d", t3->u_int);
-                else
-                    fprintf(f, "t%d", t3->u_int);
-            }
-        }
-        else if (temp->kind == DIV)
-        {
-            // printf("a translate_print DIV\n");
-            Operand t1 = temp->u.ubinop.result;
-            Operand t2 = temp->u.ubinop.op1;
-            Operand t3 = temp->u.ubinop.op2;
-            if (t1 == NULL)
-                ;
-            else
-            {
-                fprintf(f, "t%d", t1->u_int);
-                fprintf(f, " := ");
-                if (t2->kind == CONSTANT)
-                    fprintf(f, "#%d", t2->u_int);
-                else
-                    fprintf(f, "t%d", t2->u_int);
-                fprintf(f, " / ");
+
+                if (temp->kind == ADD)
+                    fprintf(f, " + ");
+                else if (temp->kind == SUB)
+                    fprintf(f, " - ");
+                else if (temp->kind == MUL)
+                    fprintf(f, " * ");
+                else if (temp->kind == DIV)
+                    fprintf(f, " / ");
+
                 if (t3->kind == CONSTANT)
                     fprintf(f, "#%d", t3->u_int);
                 else
@@ -173,8 +87,8 @@ void translate_print(FILE *f)
         else if (temp->kind == ADDRASS2)
         {
             // printf("a translate_print ADDRASS2\n");
-            Operand t1 = temp->u.uassign.op1;
-            Operand t2 = temp->u.uassign.op2;
+            Operand t1 = temp->uassign.op1;
+            Operand t2 = temp->uassign.op2;
             fprintf(f, "t%d", t1->u_int);
             fprintf(f, " := ");
             fprintf(f, "*t%d", t2->u_int);
@@ -182,8 +96,8 @@ void translate_print(FILE *f)
         else if (temp->kind == ADDRASS3)
         {
             // printf("a translate_print ADDRASS3\n");
-            Operand t1 = temp->u.uassign.op1;
-            Operand t2 = temp->u.uassign.op2;
+            Operand t1 = temp->uassign.op1;
+            Operand t2 = temp->uassign.op2;
             fprintf(f, "*t%d", t1->u_int);
             fprintf(f, " := ");
             if (t2->kind == CONSTANT)
@@ -194,8 +108,8 @@ void translate_print(FILE *f)
         else if (temp->kind == ADDRASS1)
         {
             // printf("a translate_print ADDRASS2\n");
-            Operand t1 = temp->u.uassign.op1;
-            Operand t2 = temp->u.uassign.op2;
+            Operand t1 = temp->uassign.op1;
+            Operand t2 = temp->uassign.op2;
             fprintf(f, "t%d", t1->u_int);
             fprintf(f, " := ");
             fprintf(f, "&t%d", t2->u_int);
@@ -204,15 +118,15 @@ void translate_print(FILE *f)
         {
             // printf("a translate_print GOTO\n");
             fprintf(f, "GOTO label");
-            fprintf(f, "%d", temp->u.ulabel.op->u_int);
+            fprintf(f, "%d", temp->ulabel.op->u_int);
         }
         else if (temp->kind == IF)
         {
             // printf("a translate_print IF\n");
-            Operand t1 = temp->u.uif.x;
-            Operand re = temp->u.uif.relop;
-            Operand t2 = temp->u.uif.y;
-            Operand t3 = temp->u.uif.z;
+            Operand t1 = temp->uif.x;
+            Operand re = temp->uif.relop;
+            Operand t2 = temp->uif.y;
+            Operand t3 = temp->uif.z;
             fprintf(f, "IF ");
             if (t1->kind == CONSTANT)
                 fprintf(f, "#%d", t1->u_int);
@@ -247,36 +161,36 @@ void translate_print(FILE *f)
         {
             // printf("a translate_print RETURN\n");
             fprintf(f, "RETURN ");
-            if (temp->u.ulabel.op->kind == CONSTANT)
-                fprintf(f, "#%d", temp->u.ulabel.op->u_int);
+            if (temp->ulabel.op->kind == CONSTANT)
+                fprintf(f, "#%d", temp->ulabel.op->u_int);
             else
-                fprintf(f, "t%d", temp->u.ulabel.op->u_int);
+                fprintf(f, "t%d", temp->ulabel.op->u_int);
         }
         else if (temp->kind == DEC)
         {
             // printf("a translate_print DEC\n");
             fprintf(f, "DEC ");
-            fprintf(f, "t%d ", temp->u.udec.op->u_int);
-            fprintf(f, "%d", temp->u.udec.size);
+            fprintf(f, "t%d ", temp->udec.op->u_int);
+            fprintf(f, "%d", temp->udec.size);
         }
         else if (temp->kind == ARG)
         {
             // printf("a translate_print ARG\n");
             fprintf(f, "ARG ");
-            if (temp->u.ulabel.op->kind == CONSTANT)
-                fprintf(f, "#%d", temp->u.ulabel.op->u_int);
-            else if (temp->u.ulabel.op->kind == ADDRESS)
-                fprintf(f, "&t%d", temp->u.ulabel.op->u_int);
-            else if (temp->u.ulabel.op->kind == WADDRESS)
-                fprintf(f, "*t%d", temp->u.ulabel.op->u_int);
+            if (temp->ulabel.op->kind == CONSTANT)
+                fprintf(f, "#%d", temp->ulabel.op->u_int);
+            else if (temp->ulabel.op->kind == ADDRESS)
+                fprintf(f, "&t%d", temp->ulabel.op->u_int);
+            else if (temp->ulabel.op->kind == WADDRESS)
+                fprintf(f, "*t%d", temp->ulabel.op->u_int);
             else
-                fprintf(f, "t%d", temp->u.ulabel.op->u_int);
+                fprintf(f, "t%d", temp->ulabel.op->u_int);
         }
         else if (temp->kind == CALL)
         {
             // printf("a translate_print CALL\n");
-            Operand t1 = temp->u.uassign.op1;
-            Operand t2 = temp->u.uassign.op2;
+            Operand t1 = temp->uassign.op1;
+            Operand t2 = temp->uassign.op2;
             if (t1 != NULL)
                 fprintf(f, "t%d := ", t1->u_int);
             else
@@ -292,28 +206,28 @@ void translate_print(FILE *f)
         {
             // printf("a translate_print PARAM\n");
             fprintf(f, "PARAM ");
-            if (temp->u.ulabel.op->kind == CONSTANT)
-                fprintf(f, "#%d", temp->u.ulabel.op->u_int);
+            if (temp->ulabel.op->kind == CONSTANT)
+                fprintf(f, "#%d", temp->ulabel.op->u_int);
             else
-                fprintf(f, "t%d", temp->u.ulabel.op->u_int);
+                fprintf(f, "t%d", temp->ulabel.op->u_int);
         }
         else if (temp->kind == READ)
         {
             // printf("a translate_print READ\n");
             fprintf(f, "READ ");
-            if (temp->u.ulabel.op->kind == CONSTANT)
-                fprintf(f, "#%d", temp->u.ulabel.op->u_int);
+            if (temp->ulabel.op->kind == CONSTANT)
+                fprintf(f, "#%d", temp->ulabel.op->u_int);
             else
-                fprintf(f, "t%d", temp->u.ulabel.op->u_int);
+                fprintf(f, "t%d", temp->ulabel.op->u_int);
         }
         else if (temp->kind == WRITE)
         {
             // printf("a translate_print WRITE\n");
             fprintf(f, "WRITE ");
-            if (temp->u.ulabel.op->kind == CONSTANT)
-                fprintf(f, "#%d", temp->u.ulabel.op->u_int);
+            if (temp->ulabel.op->kind == CONSTANT)
+                fprintf(f, "#%d", temp->ulabel.op->u_int);
             else
-                fprintf(f, "t%d", temp->u.ulabel.op->u_int);
+                fprintf(f, "t%d", temp->ulabel.op->u_int);
         }
         if (judge_is_null == 0)
             fprintf(f, "\n");
@@ -322,7 +236,7 @@ void translate_print(FILE *f)
         // fprintf(f,"\n");
         ////printf("a 2\n");
         temp = temp->next;
-        // temp=temp->before;
+        // temp=temp->prev;
     }
 }
 
@@ -367,7 +281,7 @@ void translate_FunDec(P_Node now)
     func_op->u_char = now->firstchild->Id_Type;
     InterCode func_in = (InterCode)malloc(sizeof(struct InterCode_));
     func_in->kind = IFUNCTION;
-    func_in->u.ulabel.op = func_op;
+    func_in->ulabel.op = func_op;
     add_to_intercode(func_in);
     //翻译varlist，参数列表
     if (now->firstchild->nextbro->nextbro->nextbro == NULL)
@@ -389,7 +303,7 @@ void translate_FunDec(P_Node now)
         // 2.每个参数生成一条中间代码
         InterCode field_in = (InterCode)malloc(sizeof(struct InterCode_));
         field_in->kind = PARAM;
-        field_in->u.ulabel.op = field_op;
+        field_in->ulabel.op = field_op;
         add_to_intercode(field_in);
         func_field = func_field->next;
     }
@@ -466,17 +380,17 @@ void translate_Stmt(P_Node now)
             t0 = new_temp();
             InterCode code0_in = (InterCode)malloc(sizeof(struct InterCode_));
             code0_in->kind = ADDRASS2;
-            code0_in->u.uassign.op1 = t0;
-            code0_in->u.uassign.op2 = t1;
+            code0_in->uassign.op1 = t0;
+            code0_in->uassign.op2 = t1;
             add_to_intercode(code0_in);
         }
 
         InterCode return_in = (InterCode)malloc(sizeof(struct InterCode_));
         return_in->kind = RETURN;
         if (t0 == NULL)
-            return_in->u.ulabel.op = t1;
+            return_in->ulabel.op = t1;
         else
-            return_in->u.ulabel.op = t0;
+            return_in->ulabel.op = t0;
         add_to_intercode(return_in);
     }
     else if (strcmp(child->Token, "IF") == 0)
@@ -491,12 +405,12 @@ void translate_Stmt(P_Node now)
             translate_Cond(child->nextbro->nextbro, l1, l2);
             InterCode l1_in = (InterCode)malloc(sizeof(struct InterCode_));
             l1_in->kind = ILABEL;
-            l1_in->u.ulabel.op = l1;
+            l1_in->ulabel.op = l1;
             add_to_intercode(l1_in);
             translate_Stmt(child->nextbro->nextbro->nextbro->nextbro);
             InterCode l2_in = (InterCode)malloc(sizeof(struct InterCode_));
             l2_in->kind = ILABEL;
-            l2_in->u.ulabel.op = l2;
+            l2_in->ulabel.op = l2;
             add_to_intercode(l2_in);
             return;
         }
@@ -511,26 +425,26 @@ void translate_Stmt(P_Node now)
             // LABEL L1
             InterCode l1_in = (InterCode)malloc(sizeof(struct InterCode_));
             l1_in->kind = ILABEL;
-            l1_in->u.ulabel.op = l1;
+            l1_in->ulabel.op = l1;
             add_to_intercode(l1_in);
             // code2
             translate_Stmt(child->nextbro->nextbro->nextbro->nextbro);
             // GOTO label3
             InterCode l2_in = (InterCode)malloc(sizeof(struct InterCode_));
             l2_in->kind = GOTO;
-            l2_in->u.ulabel.op = l3;
+            l2_in->ulabel.op = l3;
             add_to_intercode(l2_in);
             // LABEL l2
             InterCode l3_in = (InterCode)malloc(sizeof(struct InterCode_));
             l3_in->kind = ILABEL;
-            l3_in->u.ulabel.op = l2;
+            l3_in->ulabel.op = l2;
             add_to_intercode(l3_in);
             // code3
             translate_Stmt(child->nextbro->nextbro->nextbro->nextbro->nextbro->nextbro);
             // LABEL l3
             InterCode l4_in = (InterCode)malloc(sizeof(struct InterCode_));
             l4_in->kind = ILABEL;
-            l4_in->u.ulabel.op = l3;
+            l4_in->ulabel.op = l3;
             add_to_intercode(l4_in);
             return;
         }
@@ -544,26 +458,26 @@ void translate_Stmt(P_Node now)
         // LABEL L1
         InterCode l1_in = (InterCode)malloc(sizeof(struct InterCode_));
         l1_in->kind = ILABEL;
-        l1_in->u.ulabel.op = l1;
+        l1_in->ulabel.op = l1;
         add_to_intercode(l1_in);
         // code1
         translate_Cond(child->nextbro->nextbro, l2, l3);
         // LABEL l2
         InterCode l3_in = (InterCode)malloc(sizeof(struct InterCode_));
         l3_in->kind = ILABEL;
-        l3_in->u.ulabel.op = l2;
+        l3_in->ulabel.op = l2;
         add_to_intercode(l3_in);
         // code2
         translate_Stmt(child->nextbro->nextbro->nextbro->nextbro);
         // GOTO label1
         InterCode l2_in = (InterCode)malloc(sizeof(struct InterCode_));
         l2_in->kind = GOTO;
-        l2_in->u.ulabel.op = l1;
+        l2_in->ulabel.op = l1;
         add_to_intercode(l2_in);
         // LABEL l3
         InterCode l4_in = (InterCode)malloc(sizeof(struct InterCode_));
         l4_in->kind = ILABEL;
-        l4_in->u.ulabel.op = l3;
+        l4_in->ulabel.op = l3;
         add_to_intercode(l4_in);
     }
 }
@@ -629,12 +543,12 @@ void translate_Exp(P_Node now, Operand place)
             translate_Exp(child->nextbro, t1);
             InterCode minus_in = (InterCode)malloc(sizeof(struct InterCode_));
             minus_in->kind = SUB;
-            minus_in->u.ubinop.result = place;
-            minus_in->u.ubinop.op2 = t1;
+            minus_in->ubinop.result = place;
+            minus_in->ubinop.op2 = t1;
             Operand t2 = (Operand)malloc(sizeof(struct Operand_));
             t2->kind = CONSTANT;
             t2->u_int = 0;
-            minus_in->u.ubinop.op1 = t2;
+            minus_in->ubinop.op1 = t2;
             if (place->kind == FROM_ARG)
                 place->kind = VARIABLE;
             // printf("a ater_print\n");
@@ -650,32 +564,32 @@ void translate_Exp(P_Node now, Operand place)
             // code0
             InterCode code0_in = (InterCode)malloc(sizeof(struct InterCode_));
             code0_in->kind = ASSIGN;
-            code0_in->u.uassign.op1 = place;
+            code0_in->uassign.op1 = place;
             Operand t1 = (Operand)malloc(sizeof(struct Operand_));
             t1->kind = CONSTANT;
             t1->u_int = 0;
-            code0_in->u.uassign.op2 = t1;
+            code0_in->uassign.op2 = t1;
             add_to_intercode(code0_in);
             // code1
             translate_Cond(now, l1, l2);
             // code2-1
             InterCode code2_in = (InterCode)malloc(sizeof(struct InterCode_));
             code2_in->kind = ILABEL;
-            code2_in->u.ulabel.op = l1;
+            code2_in->ulabel.op = l1;
             add_to_intercode(code2_in);
             // code2-2
             InterCode code22_in = (InterCode)malloc(sizeof(struct InterCode_));
             code22_in->kind = ASSIGN;
-            code22_in->u.uassign.op1 = place;
+            code22_in->uassign.op1 = place;
             Operand t2 = (Operand)malloc(sizeof(struct Operand_));
             t2->kind = CONSTANT;
             t2->u_int = 1;
-            code22_in->u.uassign.op2 = t2;
+            code22_in->uassign.op2 = t2;
             add_to_intercode(code22_in);
             // LABEL l2
             InterCode label_in = (InterCode)malloc(sizeof(struct InterCode_));
             label_in->kind = ILABEL;
-            label_in->u.ulabel.op = l2;
+            label_in->ulabel.op = l2;
             add_to_intercode(label_in);
             return;
         }
@@ -691,20 +605,20 @@ void translate_Exp(P_Node now, Operand place)
             // code21
             InterCode code21_in = (InterCode)malloc(sizeof(struct InterCode_));
             code21_in->kind = ASSIGN;
-            code21_in->u.uassign.op2 = t1;
+            code21_in->uassign.op2 = t1;
             Operand t2 = (Operand)malloc(sizeof(struct Operand_));
             Vari find_it = find_vari_table(child->firstchild->Id_Type);
             t2->kind = VARIABLE;
             t2->u_char = child->firstchild->Id_Type;
             t2->u_int = find_it->variable;
-            code21_in->u.uassign.op1 = t2;
+            code21_in->uassign.op1 = t2;
             add_to_intercode(code21_in);
             // code22
             // printf("a 2\n");
             InterCode code22_in = (InterCode)malloc(sizeof(struct InterCode_));
             code22_in->kind = ASSIGN;
-            code22_in->u.uassign.op1 = place;
-            code22_in->u.uassign.op2 = t2;
+            code22_in->uassign.op1 = place;
+            code22_in->uassign.op2 = t2;
             add_to_intercode(code22_in);
             return;
         }
@@ -720,27 +634,27 @@ void translate_Exp(P_Node now, Operand place)
                 t0 = new_temp();
                 InterCode in_1 = (InterCode)malloc(sizeof(struct InterCode_));
                 in_1->kind = ADDRASS2;
-                in_1->u.uassign.op1 = t0;
-                in_1->u.uassign.op2 = t1;
+                in_1->uassign.op1 = t0;
+                in_1->uassign.op2 = t1;
                 add_to_intercode(in_1);
             }
             // code21
             InterCode code21_in = (InterCode)malloc(sizeof(struct InterCode_));
             code21_in->kind = ADDRASS3;
             if (t0 == NULL)
-                code21_in->u.uassign.op2 = t1;
+                code21_in->uassign.op2 = t1;
             else
-                code21_in->u.uassign.op2 = t0;
+                code21_in->uassign.op2 = t0;
             Operand t2 = new_temp();
             translate_Exp(child, t2);
-            code21_in->u.uassign.op1 = t2;
+            code21_in->uassign.op1 = t2;
             add_to_intercode(code21_in);
             // code22
             // printf("a 2\n");
             InterCode code22_in = (InterCode)malloc(sizeof(struct InterCode_));
             code22_in->kind = ASSIGN;
-            code22_in->u.uassign.op1 = place;
-            code22_in->u.uassign.op2 = t2;
+            code22_in->uassign.op1 = place;
+            code22_in->uassign.op2 = t2;
             add_to_intercode(code22_in);
             return;
         }
@@ -753,32 +667,32 @@ void translate_Exp(P_Node now, Operand place)
         // code0
         InterCode code0_in = (InterCode)malloc(sizeof(struct InterCode_));
         code0_in->kind = ASSIGN;
-        code0_in->u.uassign.op1 = place;
+        code0_in->uassign.op1 = place;
         Operand t1 = (Operand)malloc(sizeof(struct Operand_));
         t1->kind = CONSTANT;
         t1->u_int = 0;
-        code0_in->u.uassign.op2 = t1;
+        code0_in->uassign.op2 = t1;
         add_to_intercode(code0_in);
         // code1
         translate_Cond(now, l1, l2);
         // code2-1
         InterCode code2_in = (InterCode)malloc(sizeof(struct InterCode_));
         code2_in->kind = ILABEL;
-        code2_in->u.ulabel.op = l1;
+        code2_in->ulabel.op = l1;
         add_to_intercode(code2_in);
         // code2-2
         InterCode code22_in = (InterCode)malloc(sizeof(struct InterCode_));
         code22_in->kind = ASSIGN;
-        code22_in->u.uassign.op1 = place;
+        code22_in->uassign.op1 = place;
         Operand t2 = (Operand)malloc(sizeof(struct Operand_));
         t2->kind = CONSTANT;
         t2->u_int = 1;
-        code22_in->u.uassign.op2 = t2;
+        code22_in->uassign.op2 = t2;
         add_to_intercode(code22_in);
         // LABEL l2
         InterCode label_in = (InterCode)malloc(sizeof(struct InterCode_));
         label_in->kind = ILABEL;
-        label_in->u.ulabel.op = l2;
+        label_in->ulabel.op = l2;
         add_to_intercode(label_in);
         // printf("a ANDout\n");
         return;
@@ -800,8 +714,8 @@ void translate_Exp(P_Node now, Operand place)
             t3 = new_temp();
             InterCode in1 = (InterCode)malloc(sizeof(struct InterCode_));
             in1->kind = ADDRASS2;
-            in1->u.uassign.op1 = t3;
-            in1->u.uassign.op2 = t1;
+            in1->uassign.op1 = t3;
+            in1->uassign.op2 = t1;
             add_to_intercode(in1);
         }
         if (t2->kind == ADDRESS)
@@ -809,21 +723,21 @@ void translate_Exp(P_Node now, Operand place)
             t4 = new_temp();
             InterCode in1 = (InterCode)malloc(sizeof(struct InterCode_));
             in1->kind = ADDRASS2;
-            in1->u.uassign.op1 = t4;
-            in1->u.uassign.op2 = t2;
+            in1->uassign.op1 = t4;
+            in1->uassign.op2 = t2;
             add_to_intercode(in1);
         }
         InterCode code0_in = (InterCode)malloc(sizeof(struct InterCode_));
         code0_in->kind = ADD;
-        code0_in->u.ubinop.result = place;
+        code0_in->ubinop.result = place;
         if (t3 == NULL)
-            code0_in->u.ubinop.op1 = t1;
+            code0_in->ubinop.op1 = t1;
         else
-            code0_in->u.ubinop.op1 = t3;
+            code0_in->ubinop.op1 = t3;
         if (t4 == NULL)
-            code0_in->u.ubinop.op2 = t2;
+            code0_in->ubinop.op2 = t2;
         else
-            code0_in->u.ubinop.op2 = t4;
+            code0_in->ubinop.op2 = t4;
         add_to_intercode(code0_in);
         // printf("a PLUSout\n");
         return;
@@ -845,8 +759,8 @@ void translate_Exp(P_Node now, Operand place)
             t3 = new_temp();
             InterCode in1 = (InterCode)malloc(sizeof(struct InterCode_));
             in1->kind = ADDRASS2;
-            in1->u.uassign.op1 = t3;
-            in1->u.uassign.op2 = t1;
+            in1->uassign.op1 = t3;
+            in1->uassign.op2 = t1;
             add_to_intercode(in1);
         }
         if (t2->kind == ADDRESS)
@@ -854,21 +768,21 @@ void translate_Exp(P_Node now, Operand place)
             t4 = new_temp();
             InterCode in1 = (InterCode)malloc(sizeof(struct InterCode_));
             in1->kind = ADDRASS2;
-            in1->u.uassign.op1 = t4;
-            in1->u.uassign.op2 = t2;
+            in1->uassign.op1 = t4;
+            in1->uassign.op2 = t2;
             add_to_intercode(in1);
         }
         InterCode code0_in = (InterCode)malloc(sizeof(struct InterCode_));
         code0_in->kind = SUB;
-        code0_in->u.ubinop.result = place;
+        code0_in->ubinop.result = place;
         if (t3 == NULL)
-            code0_in->u.ubinop.op1 = t1;
+            code0_in->ubinop.op1 = t1;
         else
-            code0_in->u.ubinop.op1 = t3;
+            code0_in->ubinop.op1 = t3;
         if (t4 == NULL)
-            code0_in->u.ubinop.op2 = t2;
+            code0_in->ubinop.op2 = t2;
         else
-            code0_in->u.ubinop.op2 = t4;
+            code0_in->ubinop.op2 = t4;
         add_to_intercode(code0_in);
         // printf("a MINUSout\n");
         return;
@@ -890,8 +804,8 @@ void translate_Exp(P_Node now, Operand place)
             t3 = new_temp();
             InterCode in1 = (InterCode)malloc(sizeof(struct InterCode_));
             in1->kind = ADDRASS2;
-            in1->u.uassign.op1 = t3;
-            in1->u.uassign.op2 = t1;
+            in1->uassign.op1 = t3;
+            in1->uassign.op2 = t1;
             add_to_intercode(in1);
         }
         if (t2->kind == ADDRESS)
@@ -899,21 +813,21 @@ void translate_Exp(P_Node now, Operand place)
             t4 = new_temp();
             InterCode in1 = (InterCode)malloc(sizeof(struct InterCode_));
             in1->kind = ADDRASS2;
-            in1->u.uassign.op1 = t4;
-            in1->u.uassign.op2 = t2;
+            in1->uassign.op1 = t4;
+            in1->uassign.op2 = t2;
             add_to_intercode(in1);
         }
         InterCode code0_in = (InterCode)malloc(sizeof(struct InterCode_));
         code0_in->kind = MUL;
-        code0_in->u.ubinop.result = place;
+        code0_in->ubinop.result = place;
         if (t3 == NULL)
-            code0_in->u.ubinop.op1 = t1;
+            code0_in->ubinop.op1 = t1;
         else
-            code0_in->u.ubinop.op1 = t3;
+            code0_in->ubinop.op1 = t3;
         if (t4 == NULL)
-            code0_in->u.ubinop.op2 = t2;
+            code0_in->ubinop.op2 = t2;
         else
-            code0_in->u.ubinop.op2 = t4;
+            code0_in->ubinop.op2 = t4;
         add_to_intercode(code0_in);
         return;
     }
@@ -935,8 +849,8 @@ void translate_Exp(P_Node now, Operand place)
             t3 = new_temp();
             InterCode in1 = (InterCode)malloc(sizeof(struct InterCode_));
             in1->kind = ADDRASS2;
-            in1->u.uassign.op1 = t3;
-            in1->u.uassign.op2 = t1;
+            in1->uassign.op1 = t3;
+            in1->uassign.op2 = t1;
             add_to_intercode(in1);
         }
         // printf("a OUTDIV2\n");
@@ -945,22 +859,22 @@ void translate_Exp(P_Node now, Operand place)
             t4 = new_temp();
             InterCode in1 = (InterCode)malloc(sizeof(struct InterCode_));
             in1->kind = ADDRASS2;
-            in1->u.uassign.op1 = t4;
-            in1->u.uassign.op2 = t2;
+            in1->uassign.op1 = t4;
+            in1->uassign.op2 = t2;
             add_to_intercode(in1);
         }
         // printf("a OUTDIV3\n");
         InterCode code0_in = (InterCode)malloc(sizeof(struct InterCode_));
         code0_in->kind = DIV;
-        code0_in->u.ubinop.result = place;
+        code0_in->ubinop.result = place;
         if (t3 == NULL)
-            code0_in->u.ubinop.op1 = t1;
+            code0_in->ubinop.op1 = t1;
         else
-            code0_in->u.ubinop.op1 = t3;
+            code0_in->ubinop.op1 = t3;
         if (t4 == NULL)
-            code0_in->u.ubinop.op2 = t2;
+            code0_in->ubinop.op2 = t2;
         else
-            code0_in->u.ubinop.op2 = t4;
+            code0_in->ubinop.op2 = t4;
         add_to_intercode(code0_in);
         return;
     }
@@ -980,8 +894,8 @@ void translate_Exp(P_Node now, Operand place)
             t0->kind = ADDRESS;
             InterCode in = (InterCode)malloc(sizeof(struct InterCode_));
             in->kind = ADDRASS1;
-            in->u.uassign.op1 = t0;
-            in->u.uassign.op2 = t1;
+            in->uassign.op1 = t0;
+            in->uassign.op2 = t1;
             add_to_intercode(in);
             // 2.获取当前domain的偏移量
             int offset = get_offset(t1->type, fir_bro->nextbro);
@@ -1003,9 +917,9 @@ void translate_Exp(P_Node now, Operand place)
             // t2->kind=ADDRESS;
             InterCode code0_in = (InterCode)malloc(sizeof(struct InterCode_));
             code0_in->kind = ADD;
-            code0_in->u.ubinop.result = place;
-            code0_in->u.ubinop.op1 = t0;
-            code0_in->u.ubinop.op2 = t3;
+            code0_in->ubinop.result = place;
+            code0_in->ubinop.op1 = t0;
+            code0_in->ubinop.op2 = t3;
             add_to_intercode(code0_in);
         }
         else
@@ -1033,9 +947,9 @@ void translate_Exp(P_Node now, Operand place)
 
             InterCode code0_in = (InterCode)malloc(sizeof(struct InterCode_));
             code0_in->kind = ADD;
-            code0_in->u.ubinop.result = place;
-            code0_in->u.ubinop.op1 = t1;
-            code0_in->u.ubinop.op2 = t3;
+            code0_in->ubinop.result = place;
+            code0_in->ubinop.op1 = t1;
+            code0_in->ubinop.op2 = t3;
             add_to_intercode(code0_in);
         }
         return;
@@ -1056,8 +970,8 @@ void translate_Exp(P_Node now, Operand place)
             t0->kind = ADDRESS;
             InterCode in = (InterCode)malloc(sizeof(struct InterCode_));
             in->kind = ADDRASS1;
-            in->u.uassign.op1 = t0;
-            in->u.uassign.op2 = t1;
+            in->uassign.op1 = t0;
+            in->uassign.op2 = t1;
             add_to_intercode(in);
             // 2.获取数组单个单位的长度offset
             int offset = get_offset(t1->type, NULL);
@@ -1074,9 +988,9 @@ void translate_Exp(P_Node now, Operand place)
             o_offset->u_int = offset;
             InterCode in2 = (InterCode)malloc(sizeof(struct InterCode_));
             in2->kind = MUL;
-            in2->u.ubinop.result = t2;
-            in2->u.ubinop.op1 = i;
-            in2->u.ubinop.op2 = o_offset;
+            in2->ubinop.result = t2;
+            in2->ubinop.op1 = i;
+            in2->ubinop.op2 = o_offset;
             add_to_intercode(in2);
             // 4.生成中间代码t3=t1+t2
             //  Operand t3=new_temp();
@@ -1090,9 +1004,9 @@ void translate_Exp(P_Node now, Operand place)
             place->type = t1->type->array.elem;
             InterCode code0_in = (InterCode)malloc(sizeof(struct InterCode_));
             code0_in->kind = ADD;
-            code0_in->u.ubinop.result = place;
-            code0_in->u.ubinop.op1 = t0;
-            code0_in->u.ubinop.op2 = t2;
+            code0_in->ubinop.result = place;
+            code0_in->ubinop.op1 = t0;
+            code0_in->ubinop.op2 = t2;
             add_to_intercode(code0_in);
         }
         else
@@ -1110,9 +1024,9 @@ void translate_Exp(P_Node now, Operand place)
             o_offset->u_int = offset;
             InterCode in2 = (InterCode)malloc(sizeof(struct InterCode_));
             in2->kind = MUL;
-            in2->u.ubinop.result = t2;
-            in2->u.ubinop.op1 = i;
-            in2->u.ubinop.op2 = o_offset;
+            in2->ubinop.result = t2;
+            in2->ubinop.op1 = i;
+            in2->ubinop.op2 = o_offset;
             add_to_intercode(in2);
             // 4.生成中间代码t3=t1+t2
             // Operand t3=new_temp();
@@ -1125,9 +1039,9 @@ void translate_Exp(P_Node now, Operand place)
             place->type = t1->type->array.elem;
             InterCode code0_in = (InterCode)malloc(sizeof(struct InterCode_));
             code0_in->kind = ADD;
-            code0_in->u.ubinop.result = place;
-            code0_in->u.ubinop.op1 = t1;
-            code0_in->u.ubinop.op2 = t2;
+            code0_in->ubinop.result = place;
+            code0_in->ubinop.op1 = t1;
+            code0_in->ubinop.op2 = t2;
             add_to_intercode(code0_in);
         }
 
@@ -1160,17 +1074,17 @@ void translate_Exp(P_Node now, Operand place)
                 t0 = new_temp();
                 InterCode code0_in = (InterCode)malloc(sizeof(struct InterCode_));
                 code0_in->kind = ADDRASS2;
-                code0_in->u.uassign.op1 = t0;
-                code0_in->u.uassign.op2 = t1;
+                code0_in->uassign.op1 = t0;
+                code0_in->uassign.op2 = t1;
                 add_to_intercode(code0_in);
             }
             // printf("a here\n");
             InterCode code1_in = (InterCode)malloc(sizeof(struct InterCode_));
             code1_in->kind = WRITE;
             if (t0 == NULL)
-                code1_in->u.ulabel.op = t1;
+                code1_in->ulabel.op = t1;
             else
-                code1_in->u.ulabel.op = t0;
+                code1_in->ulabel.op = t0;
             add_to_intercode(code1_in);
             return;
         }
@@ -1184,8 +1098,8 @@ void translate_Exp(P_Node now, Operand place)
         // 2.place=CALL FUNCTION,保存返回值
         InterCode code1_in = (InterCode)malloc(sizeof(struct InterCode_));
         code1_in->kind = CALL;
-        code1_in->u.uassign.op1 = place;
-        code1_in->u.uassign.op2 = func_ope;
+        code1_in->uassign.op1 = place;
+        code1_in->uassign.op2 = func_ope;
         add_to_intercode(code1_in);
         return;
     }
@@ -1200,7 +1114,7 @@ void translate_Exp(P_Node now, Operand place)
         {
             InterCode code1_in = (InterCode)malloc(sizeof(struct InterCode_));
             code1_in->kind = READ;
-            code1_in->u.ulabel.op = place;
+            code1_in->ulabel.op = place;
             add_to_intercode(code1_in);
             return;
         }
@@ -1212,8 +1126,8 @@ void translate_Exp(P_Node now, Operand place)
         // 2.place=CALL FUNCTION,保存返回值
         InterCode code1_in = (InterCode)malloc(sizeof(struct InterCode_));
         code1_in->kind = CALL;
-        code1_in->u.uassign.op1 = place;
-        code1_in->u.uassign.op2 = func_ope;
+        code1_in->uassign.op1 = place;
+        code1_in->uassign.op2 = func_ope;
         add_to_intercode(code1_in);
         return;
     }
@@ -1240,15 +1154,15 @@ void translate_Cond(P_Node now, Operand lt, Operand lf)
         // code3
         InterCode code3 = (InterCode)malloc(sizeof(struct InterCode_));
         code3->kind = IF;
-        code3->u.uif.x = t1;
-        code3->u.uif.relop = op;
-        code3->u.uif.y = t2;
-        code3->u.uif.z = lt;
+        code3->uif.x = t1;
+        code3->uif.relop = op;
+        code3->uif.y = t2;
+        code3->uif.z = lt;
         add_to_intercode(code3);
         // goto labelfalse
         InterCode code4 = (InterCode)malloc(sizeof(struct InterCode_));
         code4->kind = GOTO;
-        code4->u.ulabel.op = lf;
+        code4->ulabel.op = lf;
         add_to_intercode(code4);
     }
     else if (strcmp(child->Token, "NOT") == 0)
@@ -1265,7 +1179,7 @@ void translate_Cond(P_Node now, Operand lt, Operand lf)
         // label1
         InterCode code1 = (InterCode)malloc(sizeof(struct InterCode_));
         code1->kind = ILABEL;
-        code1->u.ulabel.op = l1;
+        code1->ulabel.op = l1;
         add_to_intercode(code1);
         // code2
         translate_Cond(child->nextbro->nextbro, lt, lf);
@@ -1279,7 +1193,7 @@ void translate_Cond(P_Node now, Operand lt, Operand lf)
         // label1
         InterCode code1 = (InterCode)malloc(sizeof(struct InterCode_));
         code1->kind = ILABEL;
-        code1->u.ulabel.op = l1;
+        code1->ulabel.op = l1;
         add_to_intercode(code1);
         // code2
         translate_Cond(child->nextbro->nextbro, lt, lf);
@@ -1301,15 +1215,15 @@ void translate_Cond(P_Node now, Operand lt, Operand lf)
         // printf("a out0\n");
         InterCode code2 = (InterCode)malloc(sizeof(struct InterCode_));
         code2->kind = IF;
-        code2->u.uif.x = t1;
-        code2->u.uif.relop = op;
-        code2->u.uif.y = t2;
-        code2->u.uif.z = lt;
+        code2->uif.x = t1;
+        code2->uif.relop = op;
+        code2->uif.y = t2;
+        code2->uif.z = lt;
         add_to_intercode(code2);
         // goto
         InterCode code4 = (InterCode)malloc(sizeof(struct InterCode_));
         code4->kind = GOTO;
-        code4->u.ulabel.op = lf;
+        code4->ulabel.op = lf;
         add_to_intercode(code4);
         // printf("a out1\n");
     }
@@ -1338,8 +1252,8 @@ void translate_Dec(P_Node now)
 
         InterCode func_in = (InterCode)malloc(sizeof(struct InterCode_));
         func_in->kind = ASSIGN;
-        func_in->u.uassign.op1 = rem1;
-        func_in->u.uassign.op2 = rem2;
+        func_in->uassign.op1 = rem1;
+        func_in->uassign.op2 = rem2;
         add_to_intercode(func_in);
     }
 }
@@ -1382,8 +1296,8 @@ void translate_VarDec(P_Node now, Operand place)
             // printf("a create_dec3\n");
             InterCode func_in = (InterCode)malloc(sizeof(struct InterCode_));
             func_in->kind = DEC;
-            func_in->u.udec.op = place;
-            func_in->u.udec.size = get_size(find_field->type);
+            func_in->udec.op = place;
+            func_in->udec.size = get_size(find_field->type);
             add_to_intercode(func_in);
             return;
         }
@@ -1410,8 +1324,8 @@ void translate_VarDec(P_Node now, Operand place)
         // printf("a create_dec2\n");
         InterCode func_in = (InterCode)malloc(sizeof(struct InterCode_));
         func_in->kind = DEC;
-        func_in->u.udec.op = place;
-        func_in->u.udec.size = get_size(find_it->field->type);
+        func_in->udec.op = place;
+        func_in->udec.size = get_size(find_it->field->type);
         add_to_intercode(func_in);
         return;
     }
@@ -1448,17 +1362,17 @@ void translate_Args(P_Node now, InterCode here)
     // 2.生成ARG语句
     InterCode code1_in = (InterCode)malloc(sizeof(struct InterCode_));
     code1_in->kind = ARG;
-    code1_in->u.ulabel.op = t1;
+    code1_in->ulabel.op = t1;
     // 3.连接
     if (here == NULL)
     {
         code1_in->next = NULL;
-        code1_in->before = NULL;
+        code1_in->prev = NULL;
     }
     else
     {
         here->next = code1_in;
-        code1_in->before = here;
+        code1_in->prev = here;
     }
     exp = exp->nextbro;
     if (exp == NULL)
@@ -1473,7 +1387,7 @@ void translate_Args(P_Node now, InterCode here)
         while (temp != NULL)
         {
             InterCode rem = temp;
-            temp = temp->before;
+            temp = temp->prev;
             add_to_intercode(rem);
         }
     }
@@ -1511,8 +1425,8 @@ void translate_StructSpecifier(P_Node now)
         // printf("a create_dec1\n");
         InterCode func_in = (InterCode)malloc(sizeof(struct InterCode_));
         func_in->kind = DEC;
-        func_in->u.udec.op = t1;
-        func_in->u.udec.size = get_size(find->field->type);
+        func_in->udec.op = t1;
+        func_in->udec.size = get_size(find->field->type);
         add_to_intercode(func_in);
         return;
     }
@@ -1523,7 +1437,7 @@ void add_to_intercode(InterCode this)
     // translate_print_test(this);
     // if(in_now!=NULL) translate_print_test(in_now);
     // printf("\n");
-    this->before = NULL;
+    this->prev = NULL;
     this->next = NULL;
     if (in_head == NULL)
     {
@@ -1534,7 +1448,7 @@ void add_to_intercode(InterCode this)
     else
     {
         in_now->next = this;
-        this->before = in_now;
+        this->prev = in_now;
         in_now = this;
     }
 }

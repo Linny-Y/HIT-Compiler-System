@@ -95,8 +95,8 @@ struct InterCode_
             Operand op;
             int size;
         } udec;
-    } u;
-    InterCode before;
+    };
+    InterCode prev;
     InterCode next;
 };
 
