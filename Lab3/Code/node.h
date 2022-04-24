@@ -65,7 +65,7 @@ static P_Node NewTreeNode(int line, char* TOKEN, int amount, ...){
         root->isleaf = TRUE;
         root->firstchild = NULL;
         root->nextbro = NULL;
-        if ((!strcmp(TOKEN, "ID"))||(!strcmp(TOKEN, "TYPE"))){ // strcmp()==0 表示相同
+        if ((!strcmp(TOKEN, "ID"))||(!strcmp(TOKEN, "TYPE"))||(!strcmp(TOKEN, "RELOP"))){ // strcmp()==0 表示相同
             char *str;
             str = (char *)malloc(sizeof(char) * 40);
             strcpy(str, yytext);

@@ -5,16 +5,6 @@
 #include <stdarg.h>
 
 #include "semantics.h"
-//优化
-// 1.t1=*a, t1=1 ==> *a=1
-// 2.0赋值多次
-
-#define EQUAL 0
-#define UNEQUAL 1
-#define LESS 2
-#define GREATER 3
-#define LESS_EQUAL 4
-#define GREATER_EQUAL 5
 
 #define INTERCODE_1 1
 #define INTERCODE_2 2
@@ -26,84 +16,77 @@
 typedef struct Operand_ *Operand;
 typedef struct InterCode_ *InterCode;
 
-enum OperandKind{
-        FROM_ARG, // FROM_ARG用于传递给exp的arg，因为做为函数参数时的temp, temp[2]都会返回address//但实际上，temp[2]应返回basic
-        VARIABLE, // VARIABLE普通函数参数, char+int//先查询符号表中是否以及给该变量var值
-        TEMP,     // TEMP临时变量, int
-        CONSTANT, // CONSTANT常数，int
-        ADDRESS,  // ADDRESS结构体、数组做为函数参数char+int
-        WADDRESS, // WADDRESS写入地址
-        FUNCTION, // FUNCTION函数, char
-        LABEL,    // LABEL标号
-        RELOP     // RELOP比较，见下, int//相等0，不等1，小于2，大于3，小于等于4，大于等于5
-    };
+enum OperandKind
+{
+    VARIABLE,
+    CONSTANT,
+    ADDRESS,
+    FUNCTION,
+    LABEL,
+    RELOP,
+    UNKNOWN
+};
 struct Operand_
 {
     enum OperandKind kind;
-    int u_int; // t1t2
+    int u_int;
     char *u_char;
-    Type type; 
+    Type type;
 };
 
-// PARAM打印param v+u_int
-// ASSIGN打印：注意立即数
-// ADDRASS2打印：t2=*t1
-// ADDRADD3其实是在赋值语句中，如果左为address, 右为其他的话
-// ARG打印：如果address就&，不是则正常
-enum InterCodeKind{
-        ILABEL,
-        IFUNCTION,
-        ASSIGN,
-        ADD,
-        SUB,
-        MUL,
-        DIV,
-        ADDRASS1,
-        ADDRASS2,
-        ADDRASS3,
-        GOTO,
-        IF,
-        RETURN,
-        DEC,
-        ARG,
-        CALL,
-        PARAM,
-        READ,
-        WRITE
-    } ;
+enum InterCodeKind
+{
+    ILABEL,
+    IFUNCTION,
+    ASSIGN,
+    ADD,
+    SUB,
+    MUL,
+    DIV,
+    ADDRASS1,
+    ADDRASS2,
+    ADDRASS3,
+    GOTO,
+    IF,
+    RETURN,
+    DEC,
+    ARG,
+    CALL,
+    PARAM,
+    READ,
+    WRITE
+};
 struct InterCode_
 {
     enum InterCodeKind kind;
     union
     {
-        // LABEL, FUNCTION, GOTO, RETURN, ARG
-        // PARAM, READ, WRITE
+        // LABEL, FUNCTION, GOTO, RETURN, ARG, PARAM, READ, WRITE
         struct
         {
             Operand op;
-        } ulabel;
-        // ASSIGN, CALL
-        // ADDRASS1, ADDRASS2, ADDRASS3
+        } operand_1;
+        // ASSIGN, CALL, ADDRASS1, ADDRASS2, ADDRASS3
         struct
         {
             Operand op1, op2;
-        } uassign;
+        } operand_2;
         // ADD, SUB, MUL, DIV
         struct
         {
             Operand result, op1, op2;
-        } ubinop;
+        } operand_3;
         // IF
         struct
         {
             Operand x, relop, y, z;
-        } uif;
+        } operand_if;
         // DEC
         struct
         {
             Operand op;
             int size;
-        } udec;
+        } operand_dec;
     };
     InterCode prev;
     InterCode next;
@@ -129,10 +112,8 @@ void translate_Cond(P_Node now, Operand lt, Operand lf);
 void translate_Dec(P_Node now);
 void translate_VarDec(P_Node now, Operand place);
 void translate_Args(P_Node now, InterCode here);
-void translate_Specifier(P_Node now);
-void translate_StructSpecifier(P_Node now);
 
-void add_to_intercode(InterCode this);
+void insert_intercode(InterCode this);
 int get_offset(Type return_type);
 int get_size(Type type);
 
