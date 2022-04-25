@@ -121,11 +121,11 @@ FieldList VarList(P_Node now, int judge);
 // param def of functions
 FieldList ParamDec(P_Node now, int judge);
 
-// staments of functions
+// statements of functions
 void CompSt(P_Node now, Type type);
-// list of staments
+// list of statements
 void StmtList(P_Node now, Type type);
-// stament
+// statement
 void Stmt(P_Node now, Type type);
 Type Exp(P_Node now);
 FieldList Args(P_Node now);

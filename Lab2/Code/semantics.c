@@ -114,6 +114,15 @@ int funccmp(Function a, Function b) {
         return 1;
     return 0;
 }
+
+FieldList create_fieldlist(char* name, Type type, FieldList next) {
+    FieldList field = (FieldList)malloc(sizeof(struct FieldList_));
+    field->name = name;
+    field->type = type;
+    field->next = next;
+    return field;
+}
+
 // 建立变量表 查找错误
 void semantic_analysis(P_Node now){
     // Program -> ExtDefList
@@ -577,4 +586,39 @@ Type Exp(P_Node now){
         //Exp → LP Exp RP
         return Exp(fir_bro);
     }
+    if (strcmp(child->Token, "ID") == 0 && strcmp(fir_bro->Token, "LP") == 0) {
+        // Exp -> ID LP Args RP
+        // Exp -> ID LP RP
+        if (find_vari_table(child->Id_Type) != NULL) {
+            printf("Error type 11 at Line %d: Not a function.\n", child->line);
+            return NULL;
+        }
+        Function id_function = find_function_table(child->Id_Type);
+        if (id_function == NULL || id_function->defined == 0) {
+            printf("Error type 2 at Line %d: Undefined function \"%s\".\n", child->line, child->Id_Type);
+            return NULL;
+        }
+        if (fir_bro->nextbro->nextbro != NULL) {
+            if (fieldcmp(id_function->field, Args(fir_bro->nextbro), 0) == 0)
+                return id_function->return_type;
+        } else {
+            if (fieldcmp(id_function->field, NULL, 0) == 0)
+                return id_function->return_type;
+        }
+
+        printf("Error type 9 at Line %d: Inappliable arguments for function \"%s\".\n", child->line, id_function->name);
+        return NULL;
+    }
+}
+FieldList Args(P_Node now) {
+    // Args -> Exp COMMA Args| Exp
+    P_Node exp = now->firstchild;
+    if (exp->nextbro == NULL) {
+        // Args -> Exp
+        FieldList new_field = create_fieldlist(NULL, Exp(exp), NULL);
+        return new_field;
+    }
+    // Args -> Exp COMMA Args
+    FieldList new_field = create_fieldlist(NULL, Exp(exp), Args(exp->nextbro->nextbro));
+    return new_field;
 }
