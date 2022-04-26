@@ -31,7 +31,7 @@ int main(int argc, char** argv)
     if (!hasFault){
         // Traverse_Print(root, 0);
         semantic_analysis(root);  // 语义分析
-        translate_Program(root,f2);
+        translate_Program(root,f2); //中间代码生成
     }
     return 0;
 }
